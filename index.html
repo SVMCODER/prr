@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OSTUXY - Secure Offline File Sharing</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>OSTUXY</h1>
+            <p>Secure Offline File Sharing</p>
+        </header>
+        
+        <nav class="tab-bar">
+            <a href="#share" class="tab-item active" data-view="share">
+                <svg class="tab-icon" viewBox="0 0 24 24">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"></path>
+                </svg>
+                <span>Share</span>
+            </a>
+            <a href="#receive" class="tab-item" data-view="receive">
+                <svg class="tab-icon" viewBox="0 0 24 24">
+                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
+                </svg>
+                <span>Receive</span>
+            </a>
+            <a href="#history" class="tab-item" data-view="history">
+                <svg class="tab-icon" viewBox="0 0 24 24">
+                    <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path>
+                </svg>
+                <span>History</span>
+            </a>
+            <a href="#settings" class="tab-item" data-view="settings">
+                <svg class="tab-icon" viewBox="0 0 24 24">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path>
+                </svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+        
+        <main id="mainContent">
+            <section id="share" class="view active">
+                <h2>Share a File</h2>
+                <div class="file-input-container">
+                    <input type="file" id="fileInput" class="file-input" accept="*/*">
+                    <label for="fileInput" class="file-input-label">
+                        <svg class="file-icon" viewBox="0 0 24 24">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
+                        </svg>
+                        <span>Choose a file</span>
+                    </label>
+                </div>
+                <div id="filePreview" class="file-preview"></div>
+                <div class="share-options">
+                    <div class="option">
+                        <label for="compressionLevel">Compression:</label>
+                        <select id="compressionLevel" class="ios-select">
+                            <option value="none">None</option>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label for="encryptionStrength">Encryption:</label>
+                        <select id="encryptionStrength" class="ios-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label for="expirationTime">Expiration:</label>
+                        <select id="expirationTime" class="ios-select">
+                            <option value="1">1 hour</option>
+                            <option value="24" selected>24 hours</option>
+                            <option value="168">7 days</option>
+                            <option value="720">30 days</option>
+                        </select>
+                    </div>
+                    <div class="option">
+                        <label for="filePassword">Password:</label>
+                        <input type="password" id="filePassword" class="ios-input" placeholder="Optional">
+                    </div>
+                </div>
+                <button id="shareFileBtn" class="ios-button primary">Share File</button>
+                <div id="shareProgress" class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                    <p class="progress-text">0%</p>
+                </div>
+            </section>
+            
+            <section id="receive" class="view">
+                <h2>Receive a File</h2>
+                <div class="code-input-container">
+                    <input type="text" id="codeInput" class="ios-input" placeholder="Enter 6-digit code">
+                    <button id="receiveFileBtn" class="ios-button primary">Receive File</button>
+                </div>
+                <div id="receiveProgress" class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                    <p class="progress-text">0%</p>
+                </div>
+            </section>
+            
+            <section id="history" class="view">
+                <h2>File Transfer History</h2>
+                <div class="history-filter">
+                    <label for="historyTypeFilter">Filter:</label>
+                    <select id="historyTypeFilter" class="ios-select">
+                        <option value="all">All</option>
+                        <option value="sent">Sent</option>
+                        <option value="received">Received</option>
+                    </select>
+                </div>
+                <ul id="historyList" class="history-list"></ul>
+            </section>
+            
+            <section id="settings" class="view">
+                <h2>Settings</h2>
+                <div class="settings-group">
+                    <h3>Appearance</h3>
+                    <div class="setting-item">
+                        <label for="themeSelect">Theme:</label>
+                        <select id="themeSelect" class="ios-select">
+                            <option value="light">Light</option>
+                            <option value="dark">Dark</option>
+                            <option value="auto">Auto</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="accentColorSelect">Accent Color:</label>
+                        <select id="accentColorSelect" class="ios-select">
+                            <option value="blue">Blue</option>
+                            <option value="green">Green</option>
+                            <option value="indigo">Indigo</option>
+                            <option value="orange">Orange</option>
+                            <option value="pink">Pink</option>
+                            <option value="purple">Purple</option>
+                            <option value="red">Red</option>
+                            <option value="teal">Teal</option>
+                            <option value="yellow">Yellow</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>File Sharing</h3>
+                    <div class="setting-item">
+                        <label for="codeLengthInput">Code Length:</label>
+                        <input type="number" id="codeLengthInput" class="ios-input" min="4" max="10" value="6">
+                    </div>
+                    <div class="setting-item">
+                        <label for="maxFileSizeInput">Max File Size (MB):</label>
+                        <input type="number" id="maxFileSizeInput" class="ios-input" min="1" max="1000" value="100">
+                    </div>
+                    <div class="setting-item">
+                        <label for="autoDeleteInput">Auto-delete after (days):</label>
+                        <input type="number" id="autoDeleteInput" class="ios-input" min="1" max="365" value="30">
+                    </div>
+                </div>
+                <div class="settings-group">
+                    <h3>Security</h3>
+                    <div class="setting-item">
+                        <label for="defaultEncryptionSelect">Default Encryption:</label>
+                        <select id="defaultEncryptionSelect" class="ios-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="passwordProtectionToggle">Require Password:</label>
+                        <div class="toggle-switch">
+                            <input type="checkbox" id="passwordProtectionToggle" class="toggle-input">
+                            <label for="passwordProtectionToggle" class="toggle-label"></label>
+                        </div>
+                    </div>
+                </div>
+                <button id="saveSettingsBtn" class="ios-button primary">Save Settings</button>
+            </section>
+        </main>
+    </div>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle"></h2>
+            <div id="modalBody"></div>
+            <div class="modal-footer">
+                <button id="modalCancelBtn" class="ios-button secondary">Cancel</button>
+                <button id="modalConfirmBtn" class="ios-button primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast"></div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
+
