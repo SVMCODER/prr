@@ -21,11 +21,10 @@ const decryptData = (encryptedData, key) => CryptoJS.AES.decrypt(encryptedData, 
 // DOM Elements
 const app = document.getElementById('app');
 const mainContent = document.getElementById('mainContent');
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modalTitle');
-const modalBody = document.getElementById('modalBody');
-const modalCancelBtn = document.getElementById('modalCancelBtn');
-const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+const settingsModal = document.getElementById('settingsModal');
+const settingsBtn = document.getElementById('settingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const toast = document.getElementById('toast');
 
 // Global variables
@@ -48,11 +47,39 @@ document.querySelectorAll('.tab-item').forEach(tab => {
     });
 });
 
+settingsBtn.addEventListener('click', () => {
+    settingsModal.style.display = 'block';
+});
+
+closeSettingsBtn.addEventListener('click', () => {
+    settingsModal.style.display = 'none';
+});
+
+saveSettingsBtn.addEventListener('click', () => {
+    saveSettings();
+    settingsModal.style.display = 'none';
+    showToast('Settings saved successfully!', 'success');
+});
+
 // Initialize the app
 function initApp() {
     loadSettings();
     switchView('share');
     setupPullToRefresh();
+    setupEventListeners();
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    const fileInput = document.getElementById('fileInput');
+    const shareFileBtn = document.getElementById('shareFileBtn');
+    const receiveFileBtn = document.getElementById('receiveFileBtn');
+    const historyTypeFilter = document.getElementById('historyTypeFilter');
+
+    fileInput.addEventListener('change', handleFileInputChange);
+    shareFileBtn.addEventListener('click', handleShareFile);
+    receiveFileBtn.addEventListener('click', handleReceiveFile);
+    historyTypeFilter.addEventListener('change', renderHistory);
 }
 
 // Switch between different views
@@ -82,143 +109,67 @@ function switchView(view) {
 
 // Setup Share View
 function setupShareView() {
-    const fileInput = document.getElementById('fileInput');
-    const shareFileBtn = document.getElementById('shareFileBtn');
     const filePreview = document.getElementById('filePreview');
     const shareProgress = document.getElementById('shareProgress');
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > settings.maxFileSize * 1024 * 1024) {
-                showToast(`File size exceeds the maximum limit of ${settings.maxFileSize}MB.`, 'error');
-                fileInput.value = '';
-                return;
-            }
-            showFilePreview(file, filePreview);
-        }
-    });
-
-    shareFileBtn.addEventListener('click', () => {
-        const file = fileInput.files[0];
-        if (file) {
-            shareFile(file, shareProgress);
-        } else {
-            showToast('Please select a file to share.', 'error');
-        }
-    });
+    filePreview.innerHTML = '';
+    shareProgress.style.display = 'none';
 }
 
 // Setup Receive View
 function setupReceiveView() {
     const codeInput = document.getElementById('codeInput');
-    const receiveFileBtn = document.getElementById('receiveFileBtn');
     const receiveProgress = document.getElementById('receiveProgress');
-
-    receiveFileBtn.addEventListener('click', () => {
-        const code = codeInput.value.trim().toUpperCase();
-        if (code.length === settings.codeLength) {
-            receiveFile(code, receiveProgress);
-        } else {
-            showToast(`Please enter a valid ${settings.codeLength}-digit code.`, 'error');
-        }
-    });
+    codeInput.value = '';
+    receiveProgress.style.display = 'none';
 }
 
 // Setup History View
 function setupHistoryView() {
-    const historyList = document.getElementById('historyList');
-    const historyTypeFilter = document.getElementById('historyTypeFilter');
-
-    const renderHistory = () => {
-        const history = getHistory();
-        const filteredHistory = history.filter(item => {
-            if (historyTypeFilter.value === 'all') return true;
-            return item.type === historyTypeFilter.value;
-        });
-
-        historyList.innerHTML = '';
-        filteredHistory.forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'history-item';
-            li.innerHTML = `
-                <div class="history-item-info">
-                    <strong>${item.fileName}</strong>
-                    <br>
-                    <small>${new Date(item.timestamp).toLocaleString()}</small>
-                </div>
-                <div class="history-item-actions">
-                    <button class="ios-button secondary copy-code" data-code="${item.code}">Copy Code</button>
-                    ${item.type === 'sent' ? `<button class="ios-button primary download" data-code="${item.code}">Download</button>` : ''}
-                </div>
-            `;
-            historyList.appendChild(li);
-        });
-
-        // Add event listeners for copy code and download buttons
-        historyList.querySelectorAll('.copy-code').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const code = e.target.getAttribute('data-code');
-                navigator.clipboard.writeText(code).then(() => {
-                    showToast('Code copied to clipboard!', 'success');
-                });
-            });
-        });
-
-        historyList.querySelectorAll('.download').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const code = e.target.getAttribute('data-code');
-                downloadFile(code);
-            });
-        });
-    };
-
-    historyTypeFilter.addEventListener('change', renderHistory);
     renderHistory();
 }
 
-// Setup Settings View
-function setupSettingsView() {
-    const themeSelect = document.getElementById('themeSelect');
-    const accentColorSelect = document.getElementById('accentColorSelect');
-    const codeLengthInput = document.getElementById('codeLengthInput');
-    const maxFileSizeInput = document.getElementById('maxFileSizeInput');
-    const autoDeleteInput = document.getElementById('autoDeleteInput');
-    const defaultEncryptionSelect = document.getElementById('defaultEncryptionSelect');
-    const passwordProtectionToggle = document.getElementById('passwordProtectionToggle');
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+// Handle file input change
+function handleFileInputChange(e) {
+    const file = e.target.files[0];
+    if (file) {
+        if (file.size > settings.maxFileSize * 1024 * 1024) {
+            showToast(`File size exceeds the maximum limit of ${settings.maxFileSize}MB.`, 'error');
+            e.target.value = '';
+            return;
+        }
+        showFilePreview(file);
+    }
+}
 
-    // Populate settings
-    themeSelect.value = settings.theme;
-    accentColorSelect.value = settings.accentColor;
-    codeLengthInput.value = settings.codeLength;
-    maxFileSizeInput.value = settings.maxFileSize;
-    autoDeleteInput.value = settings.autoDeleteDays;
-    defaultEncryptionSelect.value = settings.defaultEncryption;
-    passwordProtectionToggle.checked = settings.requirePassword;
+// Handle share file button click
+function handleShareFile() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+    if (file) {
+        shareFile(file);
+    } else {
+        showToast('Please select a file to share.', 'error');
+    }
+}
 
-    saveSettingsBtn.addEventListener('click', () => {
-        settings = {
-            theme: themeSelect.value,
-            accentColor: accentColorSelect.value,
-            codeLength: parseInt(codeLengthInput.value, 10),
-            maxFileSize: parseInt(maxFileSizeInput.value, 10),
-            autoDeleteDays: parseInt(autoDeleteInput.value, 10),
-            defaultEncryption: defaultEncryptionSelect.value,
-            requirePassword: passwordProtectionToggle.checked
-        };
-        saveSettings();
-        applySettings();
-        showToast('Settings saved successfully!', 'success');
-    });
+// Handle receive file button click
+function handleReceiveFile() {
+    const codeInput = document.getElementById('codeInput');
+    const code = codeInput.value.trim().toUpperCase();
+    if (code.length === settings.codeLength) {
+        receiveFile(code);
+    } else {
+        showToast(`Please enter a valid ${settings.codeLength}-digit code.`, 'error');
+    }
 }
 
 // File sharing functionality
-async function shareFile(file, progressElement) {
+async function shareFile(file) {
     try {
-        showProgress(progressElement, 0);
+        const shareProgress = document.getElementById('shareProgress');
+        showProgress(shareProgress, 0);
         const compressedData = await compressData(file);
-        showProgress(progressElement, 30);
+        showProgress(shareProgress, 30);
 
         const code = generateCode();
         const key = settings.requirePassword ? prompt('Enter a password to encrypt the file:') : code;
@@ -228,14 +179,14 @@ async function shareFile(file, progressElement) {
         }
 
         const encryptedData = encryptData(compressedData, key);
-        showProgress(progressElement, 60);
+        showProgress(shareProgress, 60);
 
         // Simulate uploading to a server (in a real app, you'd send this to your backend)
         await new Promise(resolve => setTimeout(resolve, 1000));
-        showProgress(progressElement, 90);
+        showProgress(shareProgress, 90);
 
         saveSharedFile(file.name, file.type, encryptedData, code, key);
-        showProgress(progressElement, 100);
+        showProgress(shareProgress, 100);
 
         showToast(`File shared successfully. Your code is: ${code}`, 'success');
         addToHistory('sent', file.name, file.type, code);
@@ -246,9 +197,10 @@ async function shareFile(file, progressElement) {
 }
 
 // Receive file functionality
-async function receiveFile(code, progressElement) {
+async function receiveFile(code) {
     try {
-        showProgress(progressElement, 0);
+        const receiveProgress = document.getElementById('receiveProgress');
+        showProgress(receiveProgress, 0);
         const sharedFile = getSharedFile(code);
         if (!sharedFile) {
             showToast('Invalid code or file not found.', 'error');
@@ -264,11 +216,11 @@ async function receiveFile(code, progressElement) {
             }
         }
 
-        showProgress(progressElement, 30);
+        showProgress(receiveProgress, 30);
         const decryptedData = decryptData(sharedFile.data, key);
-        showProgress(progressElement, 60);
+        showProgress(receiveProgress, 60);
         const decompressedData = await decompressData(decryptedData);
-        showProgress(progressElement, 90);
+        showProgress(receiveProgress, 90);
 
         // Create a download link
         const url = URL.createObjectURL(new Blob([decompressedData], { type: sharedFile.fileType }));
@@ -278,7 +230,7 @@ async function receiveFile(code, progressElement) {
         link.click();
         URL.revokeObjectURL(url);
 
-        showProgress(progressElement, 100);
+        showProgress(receiveProgress, 100);
         showToast('File received and downloaded successfully.', 'success');
         addToHistory('received', sharedFile.fileName, sharedFile.fileType, code);
     } catch (error) {
@@ -319,6 +271,52 @@ function getHistory() {
     return JSON.parse(localStorage.getItem('transferHistory')) || [];
 }
 
+// Render history
+function renderHistory() {
+    const historyList = document.getElementById('historyList');
+    const historyTypeFilter = document.getElementById('historyTypeFilter');
+    const history = getHistory();
+    const filteredHistory = history.filter(item => {
+        if (historyTypeFilter.value === 'all') return true;
+        return item.type === historyTypeFilter.value;
+    });
+
+    historyList.innerHTML = '';
+    filteredHistory.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+            <div class="history-item-info">
+                <strong>${item.fileName}</strong>
+                <br>
+                <small>${new Date(item.timestamp).toLocaleString()}</small>
+            </div>
+            <div class="history-item-actions">
+                <button class="ios-button secondary copy-code" data-code="${item.code}">Copy Code</button>
+                ${item.type === 'sent' ? `<button class="ios-button primary download" data-code="${item.code}">Download</button>` : ''}
+            </div>
+        `;
+        historyList.appendChild(li);
+    });
+
+    // Add event listeners for copy code and download buttons
+    historyList.querySelectorAll('.copy-code').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const code = e.target.getAttribute('data-code');
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Code copied to clipboard!', 'success');
+            });
+        });
+    });
+
+    historyList.querySelectorAll('.download').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const code = e.target.getAttribute('data-code');
+            receiveFile(code);
+        });
+    });
+}
+
 // Load settings from local storage
 function loadSettings() {
     const savedSettings = JSON.parse(localStorage.getItem('settings'));
@@ -330,7 +328,25 @@ function loadSettings() {
 
 // Save settings to local storage
 function saveSettings() {
+    const themeSelect = document.getElementById('themeSelect');
+    const accentColorSelect = document.getElementById('accentColorSelect');
+    const codeLengthInput = document.getElementById('codeLengthInput');
+    const maxFileSizeInput = document.getElementById('maxFileSizeInput');
+    const autoDeleteInput = document.getElementById('autoDeleteInput');
+    const defaultEncryptionSelect = document.getElementById('defaultEncryptionSelect');
+    const passwordProtectionToggle = document.getElementById('passwordProtectionToggle');
+
+    settings = {
+        theme: themeSelect.value,
+        accentColor: accentColorSelect.value,
+        codeLength: parseInt(codeLengthInput.value, 10),
+        maxFileSize: parseInt(maxFileSizeInput.value, 10),
+        autoDeleteDays: parseInt(autoDeleteInput.value, 10),
+        defaultEncryption: defaultEncryptionSelect.value,
+        requirePassword: passwordProtectionToggle.checked
+    };
     localStorage.setItem('settings', JSON.stringify(settings));
+    applySettings();
 }
 
 // Apply settings
@@ -338,20 +354,38 @@ function applySettings() {
     document.body.classList.remove('light-theme', 'dark-theme');
     document.body.classList.add(`${settings.theme}-theme`);
     document.documentElement.style.setProperty('--primary-color', `var(--${settings.accentColor})`);
+
+    // Update settings form
+    const themeSelect = document.getElementById('themeSelect');
+    const accentColorSelect = document.getElementById('accentColorSelect');
+    const codeLengthInput = document.getElementById('codeLengthInput');
+    const maxFileSizeInput = document.getElementById('maxFileSizeInput');
+    const autoDeleteInput = document.getElementById('autoDeleteInput');
+    const defaultEncryptionSelect = document.getElementById('defaultEncryptionSelect');
+    const passwordProtectionToggle = document.getElementById('passwordProtectionToggle');
+
+    themeSelect.value = settings.theme;
+    accentColorSelect.value = settings.accentColor;
+    codeLengthInput.value = settings.codeLength;
+    maxFileSizeInput.value = settings.maxFileSize;
+    autoDeleteInput.value = settings.autoDeleteDays;
+    defaultEncryptionSelect.value = settings.defaultEncryption;
+    passwordProtectionToggle.checked = settings.requirePassword;
 }
 
 // Show file preview
-function showFilePreview(file, previewElement) {
-    previewElement.innerHTML = '';
+function showFilePreview(file) {
+    const filePreview = document.getElementById('filePreview');
+    filePreview.innerHTML = '';
     if (file.type.startsWith('image/')) {
         const img = document.createElement('img');
         img.src = URL.createObjectURL(file);
         img.onload = () => URL.revokeObjectURL(img.src);
         img.style.maxWidth = '100%';
         img.style.maxHeight = '200px';
-        previewElement.appendChild(img);
+        filePreview.appendChild(img);
     } else {
-        previewElement.textContent = `File: ${file.name} (${formatFileSize(file.size)})`;
+        filePreview.textContent = `File: ${file.name} (${formatFileSize(file.size)})`;
     }
 }
 
@@ -372,14 +406,6 @@ function showProgress(element, percent) {
     if (percent === 100) {
         setTimeout(() => {
             element.style.display = 'none';
-        }, 1000);
-    }
-}
-
-// Show toast notification
-function showHere's the continuation of the text stream from the cut-off point:
-
-none';
         }, 1000);
     }
 }
@@ -462,4 +488,73 @@ setInterval(autoDeleteOldFiles, 24 * 60 * 60 * 1000);
 
 // Initialize the app
 initApp();
+
+// Additional features and improvements
+
+// File type restrictions
+const allowedFileTypes = [
+    'image/*',
+    'audio/*',
+    'video/*',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain'
+];
+
+function updateFileInputAccept() {
+    const fileInput = document.getElementById('fileInput');
+    fileInput.accept = allowedFileTypes.join(',');
+}
+
+// Call this function after loading settings
+updateFileInputAccept();
+
+// Error handling and logging
+function logError(error, context) {
+    console.error(`Error in ${context}:`, error);
+    // In a real-world application, you might want to send this error to a logging service
+}
+
+// Wrap async functions with error handling
+async function wrapAsyncFunction(func, context) {
+    try {
+        await func();
+    } catch (error) {
+        logError(error, context);
+        showToast('An error occurred. Please try again.', 'error');
+    }
+}
+
+// Add keyboard shortcuts
+function addKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            switch (e.key) {
+                case 's':
+                    e.preventDefault();
+                    switchView('share');
+                    break;
+                case 'r':
+                    e.preventDefault();
+                    switchView('receive');
+                    break;
+                case 'h':
+                    e.preventDefault();
+                    switchView('history');
+                    break;
+                case 'o':
+                    e.preventDefault();
+                    settingsModal.style.display = 'block';
+                    break;
+            }
+        }
+    });
+}
+
+addKeyboardShortcuts();
 

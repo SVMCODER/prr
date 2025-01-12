@@ -1,8 +1,13 @@
+/* Reset and base styles */
 :root {
     --primary-color: #007AFF;
     --secondary-color: #5856D6;
     --success-color: #34C759;
     --warning-color: #FF9500;
+    --danger-color: #FF3B30;
+    --light-background: #I understand. I'll continue the text stream from the cut-off point, maintaining coherence and consistency with the previous content. Here's the continuation:
+
+color: #FF9500;
     --danger-color: #FF3B30;
     --light-background: #F2F2F7;
     --dark-background: #1C1C1E;
@@ -14,9 +19,11 @@
     --dark-border: #38383A;
     --light-card-background: #FFFFFF;
     --dark-card-background: #2C2C2E;
-    --header-height: 44px;
+    --header-height: 60px;
     --tab-bar-height: 50px;
-    --horizontal-padding: 16px;
+    --horizontal-padding: 20px;
+    --border-radius: 12px;
+    --transition-speed: 0.3s;
 }
 
 * {
@@ -26,7 +33,7 @@
 }
 
 body {
-    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 1.5;
     color: var(--light-text);
@@ -51,17 +58,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-    font-size: 34px;
+    font-size: 28px;
 }
 
 h2 {
-    font-size: 28px;
-    margin-bottom: 16px;
+    font-size: 24px;
+    margin-bottom: 20px;
 }
 
 h3 {
-    font-size: 22px;
-    margin-bottom: 12px;
+    font-size: 20px;
+    margin-bottom: 16px;
 }
 
 p {
@@ -72,23 +79,45 @@ p {
 .app-header {
     background-color: var(--light-card-background);
     padding: var(--horizontal-padding);
-    text-align: center;
     height: var(--header-height);
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid var(--light-border);
 }
 
+.header-content {
+    display: flex;
+    flex-direction: column;
+}
+
 .app-header h1 {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 24px;
+    font-weight: 700;
 }
 
 .app-header p {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--light-secondary-text);
     margin-bottom: 0;
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+}
+
+.header-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--primary-color);
+}
+
+.header-btn svg {
+    width: 24px;
+    height: 24px;
 }
 
 /* Tab Bar */
@@ -108,9 +137,9 @@ p {
     justify-content: center;
     color: var(--light-secondary-text);
     text-decoration: none;
-    font-size: 10px;
+    font-size: 12px;
     padding: 4px 0;
-    transition: color 0.3s ease;
+    transition: color var(--transition-speed) ease;
 }
 
 .tab-item.active {
@@ -134,7 +163,7 @@ p {
 
 .view {
     display: none;
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn var(--transition-speed) ease;
 }
 
 .view.active {
@@ -150,11 +179,11 @@ p {
 .ios-button {
     display: inline-block;
     padding: 12px 20px;
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     font-size: 17px;
     font-weight: 600;
     text-align: center;
-    transition: background-color 0.3s ease, opacity 0.3s ease;
+    transition: background-color var(--transition-speed) ease, opacity var(--transition-speed) ease;
     cursor: pointer;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
@@ -180,11 +209,11 @@ p {
     width: 100%;
     padding: 12px 16px;
     font-size: 17px;
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     border: 1px solid var(--light-border);
     background-color: var(--light-card-background);
     color: var(--light-text);
-    transition: border-color 0.3s ease;
+    transition: border-color var(--transition-speed) ease;
 }
 
 .ios-input:focus {
@@ -225,11 +254,11 @@ p {
     padding: 12px 20px;
     background-color: var(--light-background);
     color: var(--primary-color);
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     font-size: 17px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color var(--transition-speed) ease;
 }
 
 .file-input-label:hover {
@@ -248,7 +277,7 @@ p {
     margin-top: 20px;
     padding: 16px;
     background-color: var(--light-card-background);
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -285,7 +314,7 @@ p {
     height: 100%;
     background-color: var(--primary-color);
     width: 0;
-    transition: width 0.3s ease;
+    transition: width var(--transition-speed) ease;
 }
 
 .progress-text {
@@ -312,7 +341,7 @@ p {
 
 .history-item {
     background-color: var(--light-card-background);
-    border-radius: 10px;
+    border-radius: var(--border-radius);
     padding: 16px;
     margin-bottom: 12px;
     display: flex;
@@ -330,9 +359,41 @@ p {
     gap: 8px;
 }
 
-/* Settings view */
+/* Settings modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn var(--transition-speed) ease;
+}
+
+.modal-content {
+    background-color: var(--light-card-background);
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: slideUp var(--transition-speed) ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal h2 {
+    margin-bottom: 16px;
+}
+
 .settings-group {
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .setting-item {
@@ -391,45 +452,6 @@ p {
     transform: translateX(20px);
 }
 
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-content {
-    background-color: var(--light-card-background);
-    margin: 15% auto;
-    padding: 20px;
-    border-radius: 14px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.modal h2 {
-    margin-bottom: 16px;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
-}
-
 /* Toast notifications */
 .toast {
     position: fixed;
@@ -443,7 +465,7 @@ p {
     font-size: 15px;
     z-index: 1000;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-speed) ease;
 }
 
 .toast.show {
@@ -529,7 +551,7 @@ p {
     }
 
     h2 {
-        font-size: 24px;
+        font-size: 22px;
     }
 
     .ios-button {
@@ -591,11 +613,6 @@ p {
 .ml-2 { margin-left: 8px; }
 .ml-3 { margin-left: 12px; }
 .ml-4 { margin-left: 16px; }
-.mlHere's the continuation of the text stream from the cut-off point:
-
-left: 8px; }
-.ml-3 { margin-left: 12px; }
-.ml-4 { margin-left: 16px; }
 .ml-5 { margin-left: 20px; }
 .mr-1 { margin-right: 4px; }
 .mr-2 { margin-right: 8px; }
@@ -608,15 +625,37 @@ left: 8px; }
 .p-4 { padding: 16px; }
 .p-5 { padding: 20px; }
 
-/* High contrast mode */
-@media (forced-colors: active) {
-    .ios-button,
-    .ios-input,
-    .ios-select,
-    .toggle-label {
-        border: 1px solid currentColor;
-    }
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+@keyframes slideOutDown {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+.animate-fade-out { animation: fadeOut 0.3s ease-in-out; }
+.animate-slide-in-up { animation: slideInUp 0.3s ease-in-out; }
+.animate-slide-out-down { animation: slideOutDown 0.3s ease-in-out; }
+.animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
 /* Print styles */
 @media print {
@@ -639,6 +678,306 @@ left: 8px; }
 
     .view {
         page-break-inside: avoid;
+    }
+}
+
+/* High contrast mode */
+@media (forced-colors: active) {
+    .ios-button,
+    .ios-input,
+    .ios-select,
+    .toggle-label {
+        border: 1px solid currentColor;
+    }
+}
+
+/* Additional iOS-style components */
+
+/* iOS-style switches */
+.ios-switch {
+    position: relative;
+    display: inline-block;
+    width: 51px;
+    height: 31px;
+}
+
+.ios-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.ios-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #E9E9EA;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.ios-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 27px;
+    width: 27px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ios-switch input:checked + .ios-switch-slider {
+    background-color: var(--primary-color);
+}
+
+.ios-switch input:checked + .ios-switch-slider:before {
+    transform: translateX(20px);
+}
+
+/* iOS-style checkboxes */
+.ios-checkbox {
+    position: relative;
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+}
+
+.ios-checkbox input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.ios-checkbox-checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 22px;
+    width: 22px;
+    background-color: #E9E9EA;
+    border-radius: 4px;
+    transition: .4s;
+}
+
+.ios-checkbox input:checked + .ios-checkbox-checkmark {
+    background-color: var(--primary-color);
+}
+
+.ios-checkbox-checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 8px;
+    top: 4px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.ios-checkbox input:checked + .ios-checkbox-checkmark:after {
+    display: block;
+}
+
+/* iOS-style radio buttons */
+.ios-radio {
+    position: relative;
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+}
+
+.ios-radio input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.ios-radio-button {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 22px;
+    width: 22px;
+    background-color: #E9E9EA;
+    border-radius: 50%;
+    transition: .4s;
+}
+
+.ios-radio input:checked + .ios-radio-button {
+    background-color: var(--primary-color);
+}
+
+.ios-radio-button:after {
+    content: "";
+    position: absolute;
+    display: none;
+    top: 6px;
+    left: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: white;
+}
+
+.ios-radio input:checked + .ios-radio-button:after {
+    display: block;
+}
+
+/* iOS-style sliders */
+.ios-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: #E9E9EA;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+}
+
+.ios-slider:hover {
+    opacity: 1;
+}
+
+.ios-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    background: white;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.13);
+}
+
+.ios-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    background: white;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.13);
+}
+
+/* iOS-style search bar */
+.ios-search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #E9E9EA;
+    border-radius: 10px;
+    padding: 0 10px;
+    height: 36px;
+}
+
+.ios-search-icon {
+    width: 16px;
+    height: 16px;
+    fill: #8E8E93;
+    margin-right: 8px;
+}
+
+.ios-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 17px;
+    color: var(--light-text);
+}
+
+.ios-search-input:focus {
+    outline: none;
+}
+
+.ios-search-cancel {
+    font-size: 17px;
+    color: var(--primary-color);
+    cursor: pointer;
+    display: none;
+}
+
+.ios-search-bar.active .ios-search-cancel {
+    display: block;
+}
+
+/* iOS-style activity indicator */
+.ios-activity-indicator {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* iOS-style badges */
+.ios-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    background-color: var(--danger-color);
+    border-radius: 10px;
+}
+
+/* Dark mode styles for new components */
+@media (prefers-color-scheme: dark) {
+    .ios-switch-slider {
+        background-color: #39393D;
+    }
+
+    .ios-checkbox-checkmark,
+    .ios-radio-button {
+        background-color: #39393D;
+    }
+
+    .ios-slider {
+        background: #39393D;
+    }
+
+    .ios-search-bar {
+        background-color: #1C1C1E;
+    }
+
+    .ios-search-icon {
+        fill: #98989D;
+    }
+
+    .ios-search-input {
+        color: var(--dark-text);
+    }
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 480px) {
+    .ios-form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ios-form-label {
+        margin-bottom: 8px;
+    }
+
+    .ios-alert {
+        width: 90%;
+        max-width: 280px;
     }
 }
 

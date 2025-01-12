@@ -4,16 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>OSTUXY - Secure Offline File Sharing</title>
+    <meta name="description" content="OSTUXY: A secure, offline file sharing application with end-to-end encryption and advanced features.">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
+    <link rel="icon" type="image/png" href="favicon.png">
 </head>
 <body>
     <div id="app">
         <header class="app-header">
-            <h1>OSTUXY</h1>
-            <p>Secure Offline File Sharing</p>
+            <div class="header-content">
+                <h1>OSTUXY</h1>
+                <p>Secure Offline File Sharing</p>
+            </div>
+            <nav class="header-nav">
+                <button id="settingsBtn" class="header-btn" aria-label="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </nav>
         </header>
         
         <nav class="tab-bar">
@@ -34,12 +46,6 @@
                     <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path>
                 </svg>
                 <span>History</span>
-            </a>
-            <a href="#settings" class="tab-item" data-view="settings">
-                <svg class="tab-icon" viewBox="0 0 24 24">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"></path>
-                </svg>
-                <span>Settings</span>
             </a>
         </nav>
         
@@ -123,80 +129,72 @@
                 </div>
                 <ul id="historyList" class="history-list"></ul>
             </section>
-            
-            <section id="settings" class="view">
-                <h2>Settings</h2>
-                <div class="settings-group">
-                    <h3>Appearance</h3>
-                    <div class="setting-item">
-                        <label for="themeSelect">Theme:</label>
-                        <select id="themeSelect" class="ios-select">
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="auto">Auto</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <label for="accentColorSelect">Accent Color:</label>
-                        <select id="accentColorSelect" class="ios-select">
-                            <option value="blue">Blue</option>
-                            <option value="green">Green</option>
-                            <option value="indigo">Indigo</option>
-                            <option value="orange">Orange</option>
-                            <option value="pink">Pink</option>
-                            <option value="purple">Purple</option>
-                            <option value="red">Red</option>
-                            <option value="teal">Teal</option>
-                            <option value="yellow">Yellow</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="settings-group">
-                    <h3>File Sharing</h3>
-                    <div class="setting-item">
-                        <label for="codeLengthInput">Code Length:</label>
-                        <input type="number" id="codeLengthInput" class="ios-input" min="4" max="10" value="6">
-                    </div>
-                    <div class="setting-item">
-                        <label for="maxFileSizeInput">Max File Size (MB):</label>
-                        <input type="number" id="maxFileSizeInput" class="ios-input" min="1" max="1000" value="100">
-                    </div>
-                    <div class="setting-item">
-                        <label for="autoDeleteInput">Auto-delete after (days):</label>
-                        <input type="number" id="autoDeleteInput" class="ios-input" min="1" max="365" value="30">
-                    </div>
-                </div>
-                <div class="settings-group">
-                    <h3>Security</h3>
-                    <div class="setting-item">
-                        <label for="defaultEncryptionSelect">Default Encryption:</label>
-                        <select id="defaultEncryptionSelect" class="ios-select">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="setting-item">
-                        <label for="passwordProtectionToggle">Require Password:</label>
-                        <div class="toggle-switch">
-                            <input type="checkbox" id="passwordProtectionToggle" class="toggle-input">
-                            <label for="passwordProtectionToggle" class="toggle-label"></label>
-                        </div>
-                    </div>
-                </div>
-                <button id="saveSettingsBtn" class="ios-button primary">Save Settings</button>
-            </section>
         </main>
     </div>
     
-    <div id="modal" class="modal">
+    <div id="settingsModal" class="modal">
         <div class="modal-content">
-            <h2 id="modalTitle"></h2>
-            <div id="modalBody"></div>
-            <div class="modal-footer">
-                <button id="modalCancelBtn" class="ios-button secondary">Cancel</button>
-                <button id="modalConfirmBtn" class="ios-button primary">Confirm</button>
+            <h2>Settings</h2>
+            <div class="settings-group">
+                <h3>Appearance</h3>
+                <div class="setting-item">
+                    <label for="themeSelect">Theme:</label>
+                    <select id="themeSelect" class="ios-select">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                        <option value="auto">Auto</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="accentColorSelect">Accent Color:</label>
+                    <select id="accentColorSelect" class="ios-select">
+                        <option value="blue">Blue</option>
+                        <option value="green">Green</option>
+                        <option value="indigo">Indigo</option>
+                        <option value="orange">Orange</option>
+                        <option value="pink">Pink</option>
+                        <option value="purple">Purple</option>
+                        <option value="red">Red</option>
+                        <option value="teal">Teal</option>
+                        <option value="yellow">Yellow</option>
+                    </select>
+                </div>
             </div>
+            <div class="settings-group">
+                <h3>File Sharing</h3>
+                <div class="setting-item">
+                    <label for="codeLengthInput">Code Length:</label>
+                    <input type="number" id="codeLengthInput" class="ios-input" min="4" max="10" value="6">
+                </div>
+                <div class="setting-item">
+                    <label for="maxFileSizeInput">Max File Size (MB):</label>
+                    <input type="number" id="maxFileSizeInput" class="ios-input" min="1" max="1000" value="100">
+                </div>
+                <div class="setting-item">
+                    <label for="autoDeleteInput">Auto-delete after (days):</label>
+                    <input type="number" id="autoDeleteInput" class="ios-input" min="1" max="365" value="30">
+                </div>
+            </div>
+            <div class="settings-group">
+                <h3>Security</h3>
+                <div class="setting-item">
+                    <label for="defaultEncryptionSelect">Default Encryption:</label>
+                    <select id="defaultEncryptionSelect" class="ios-select">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="passwordProtectionToggle">Require Password:</label>
+                    <div class="toggle-switch">
+                        <input type="checkbox" id="passwordProtectionToggle" class="toggle-input">
+                        <label for="passwordProtectionToggle" class="toggle-label"></label>
+                    </div>
+                </div>
+            </div>
+            <button id="saveSettingsBtn" class="ios-button primary">Save Settings</button>
+            <button id="closeSettingsBtn" class="ios-button secondary">Close</button>
         </div>
     </div>
     
