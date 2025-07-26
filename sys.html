@@ -1,0 +1,214 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced Object Tracker</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background-color: #000; overflow: hidden; }
+    #overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; }
+    #video, #canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; object-fit: cover; }
+    #controls { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 5px; flex-wrap: wrap; }
+    .btn-sm { font-size: 0.7rem; padding: 0.25rem 0.5rem; }
+    #output-box { position: absolute; bottom: 10px; left: 10px; background-color: rgba(0,0,0,0.7); padding: 8px; border-radius: 10px; color: white; max-width: 90vw; font-size: 12px; z-index: 1000; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button class="btn btn-sm btn-primary" onclick="switchCamera()">Switch</button>
+    <button class="btn btn-sm btn-secondary" onclick="toggleMode()">Mode</button>
+    <button class="btn btn-sm btn-success" onclick="toggleDetails()">Details</button>
+    <button class="btn btn-sm btn-warning" onclick="takeSnapshot()">Snapshot</button>
+  </div>
+  <div id="overlay">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="output-box">
+    <strong>Mode:</strong> <span id="mode">Distance</span>
+    <pre id="output">Initializing...</pre>
+  </div>  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0"></script>  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2"></script>  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const output = document.getElementById('output');
+    const modeDisplay = document.getElementById('mode');
+    let mode = 'distance';
+    let showDetails = true;
+    let currentStream;
+    let currentFacingMode = 'environment';
+    let PIXELS_PER_INCH = 37.8;
+    let isCalibrated = false;
+
+    const objectMeasurements = new Map();
+    const distanceMeasurements = new Map();
+    const measurementBuffer = new Map();
+
+    function speak(text) {
+      const msg = new SpeechSynthesisUtterance(text);
+      msg.lang = 'en-US';
+      window.speechSynthesis.speak(msg);
+    }
+
+    function pxToInches(px) { return isFinite(px) && PIXELS_PER_INCH > 0 ? px / PIXELS_PER_INCH : 0; }
+    function pxToCM(px) { return (pxToInches(px) * 2.54).toFixed(1); }
+    function inchesToFeetInches(inches) {
+      const f = Math.floor(inches / 12);
+      const i = Math.round(inches % 12);
+      return `${f} ft ${i} in`;
+    }
+
+    function detectShape(w, h) {
+      if (h > w * 1.2) return 'vertical';
+      if (w > h * 1.2) return 'horizontal';
+      return 'square';
+    }
+
+    async function autoCalibrate(preds) {
+      if (!isCalibrated) {
+        const ref = preds.find(p => p.class === 'bottle' || p.class === 'book');
+        if (ref) {
+          PIXELS_PER_INCH = ref.bbox[3] / (ref.class === 'bottle' ? 9 : 11);
+          isCalibrated = true;
+          speak(`Calibrated using ${ref.class}`);
+        }
+      }
+    }
+
+    async function startCamera() {
+      currentStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode }, audio: false });
+      video.srcObject = currentStream;
+      video.onloadedmetadata = () => {
+        video.play();
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      };
+    }
+
+    async function switchCamera() {
+      currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+      if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+      await startCamera();
+    }
+
+    function toggleMode() {
+      mode = (mode === 'distance') ? 'height' : 'distance';
+      modeDisplay.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+      speak(`Mode switched to ${mode}`);
+    }
+
+    function toggleDetails() {
+      showDetails = !showDetails;
+    }
+
+    function takeSnapshot() {
+      const sc = document.createElement('canvas');
+      sc.width = canvas.width;
+      sc.height = canvas.height;
+      const scCtx = sc.getContext('2d');
+      scCtx.drawImage(video, 0, 0);
+      scCtx.drawImage(canvas, 0, 0);
+      const link = document.createElement('a');
+      link.download = `snap-${Date.now()}.png`;
+      link.href = sc.toDataURL();
+      link.click();
+    }
+
+    function bufferMeasurement(map, key, value, threshold = 5) {
+      if (!map.has(key)) map.set(key, []);
+      const arr = map.get(key);
+      arr.push(value);
+      if (arr.length > threshold) arr.shift();
+      const consistent = arr.every(v => Math.abs(v - value) < 1);
+      if (consistent && arr.length === threshold) {
+        map.delete(key);
+        return true;
+      }
+      return false;
+    }
+
+    async function runDetection() {
+      const model = await cocoSsd.load();
+      const detect = async () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const preds = await model.detect(video);
+        output.textContent = '';
+        const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        preds.forEach((p, i) => {
+          const label = labels[i % labels.length];
+          const [x, y, w, h] = p.bbox;
+          const midX = x + w / 2;
+          const topY = y;
+          const botY = y + h;
+          const shape = detectShape(w, h);
+          const cm = parseFloat(pxToCM(h));
+          const key = `${label}-${p.class}`;
+
+          ctx.strokeStyle = 'lime';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, w, h);
+          ctx.fillStyle = 'yellow';
+          ctx.fillText(`${label}: ${p.class}`, x, y > 10 ? y - 5 : 10);
+
+          if (mode === 'height' && isCalibrated) {
+            ctx.strokeStyle = 'red';
+            ctx.beginPath();
+            ctx.moveTo(midX, topY);
+            ctx.lineTo(midX, botY);
+            ctx.stroke();
+            ctx.fillText(`${cm.toFixed(1)} cm`, midX + 5, (topY + botY) / 2);
+
+            if (bufferMeasurement(measurementBuffer, key, cm)) {
+              if (objectMeasurements.get(key) !== cm) {
+                speak(`${label} height is ${cm.toFixed(1)} centimeters`);
+                objectMeasurements.set(key, cm);
+              }
+            }
+          }
+
+          output.textContent += `${label} → ${p.class} (${shape}) | Height: ${inchesToFeetInches(pxToInches(h))}, ${cm.toFixed(1)} cm\n`;
+        });
+
+        if (mode === 'distance' && isCalibrated && preds.length >= 2) {
+          for (let i = 0; i < preds.length - 1; i++) {
+            const a = preds[i].bbox, b = preds[i + 1].bbox;
+            const ax = a[0] + a[2] / 2, ay = a[1] + a[3] / 2;
+            const bx = b[0] + b[2] / 2, by = b[1] + b[3] / 2;
+            const d = Math.hypot(bx - ax, by - ay);
+            const cm = parseFloat(pxToCM(d));
+            const key = `D-${i}-${i + 1}`;
+
+            ctx.strokeStyle = 'red';
+            ctx.beginPath();
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+            ctx.stroke();
+            ctx.fillStyle = 'red';
+            ctx.fillText(`${cm.toFixed(1)} cm`, (ax + bx) / 2, (ay + by) / 2);
+
+            if (bufferMeasurement(measurementBuffer, key, cm)) {
+              if (distanceMeasurements.get(key) !== cm) {
+                speak(`Distance from ${labels[i]} to ${labels[i + 1]} is ${cm.toFixed(1)} centimeters`);
+                distanceMeasurements.set(key, cm);
+              }
+            }
+
+            output.textContent += `Distance ${labels[i]}-${labels[i + 1]}: ${inchesToFeetInches(pxToInches(d))}, ${cm.toFixed(1)} cm\n`;
+          }
+        }
+
+        await autoCalibrate(preds);
+        requestAnimationFrame(detect);
+      };
+      detect();
+    }
+
+  
+        startCamera().then(runDetection); 
+      
+      alert("This is coded by Shaurya Tripathi and will start in 3 seconds")
+    
+  
+  </script></body>
+  </html>
