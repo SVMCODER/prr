@@ -3,204 +3,688 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OSTUXY - Secure Offline File Sharing</title>
-    <meta name="description" content="OSTUXY: A secure, offline file sharing application with end-to-end encryption and advanced features.">
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.0.4/pako.min.js"></script>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <title>CrePay | Offline Payments</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-dark: #0f0c29;
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --accent: #00d2ff;
+            --danger: #ff4b4b;
+            --success: #00ff88;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select:none;}
+        
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Glassmorphism Container */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            max-width: 480px;
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            overflow-y: auto;
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .screen.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* UI Elements */
+        h1, h2, h3 { font-weight: 600; letter-spacing: 0.5px; }
+        .text-center { text-align: center; }
+        .mt-20 { margin-top: 20px; }
+        .mt-40 { margin-top: 40px; }
+
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: var(--accent); background: rgba(0,0,0,0.5); }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            
+            transition: 0.2s;
+            background: var(--glass-bg);
+            color: white;
+            border: 1px solid var(--glass-border);
+            margin-top: 10px;
+        }
+        .btn-primary { background: var(--accent); color: #000; border: none; }
+        .btn-danger { background: var(--danger); color: white; border: none; }
+        .btn:active { transform: scale(0.96); }
+
+        /* Dashboard Specifics */
+        .balance-card {
+            text-align: center;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+        }
+        .balance-amount { font-size: 42px; font-weight: 700; margin: 10px 0; }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            
+        }
+        .action-btn i { font-size: 24px; margin-bottom: 8px; color: var(--accent); }
+
+        /* Transactions */
+        .tx-list { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        .tx-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            
+        }
+        .tx-item:hover { background: rgba(255,255,255,0.02); }
+        .tx-left { display: flex; flex-direction: column; }
+        .tx-user { font-weight: 600; font-size: 15px; }
+        .tx-date { font-size: 12px; color: var(--text-muted); }
+        .tx-amount { font-weight: 700; }
+        .tx-plus { color: var(--success); }
+        .tx-minus { color: var(--danger); }
+
+        /* Custom Modal / Alert */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-box {
+            width: 85%; max-width: 320px;
+            background: #1e1e2f;
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* QR Scanner Area */
+        #reader { width: 100%; border-radius: 15px; overflow: hidden; margin-top: 20px; border: 2px solid var(--accent); }
+        
+        /* QR Generation Area */
+        #qrcode { margin: 20px auto; padding: 15px; background: white; border-radius: 10px; width: fit-content; }
+
+        /* Detail View */
+        .detail-row {
+            display: flex; justify-content: space-between;
+            padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .detail-label { color: var(--text-muted); }
+
+        /* Fab Header */
+        .header-nav {
+            display: flex; align-items: center; margin-bottom: 20px;
+        }
+        .back-btn { font-size: 20px; padding: 10px; color: var(--text-muted); }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <header class="app-header">
-            <div class="header-content">
-                <h1>OSTUXY</h1>
-                <p>Secure Offline File Sharing</p>
+
+<div class="app-container">
+
+    <div id="auth-screen" class="screen active">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <div class="text-center mb-4">
+                <i class="fa-solid fa-wallet fa-3x" style="color:var(--accent); margin-bottom:20px;"></i>
+                <h1>CrePay</h1>
+                <p style="color:var(--text-muted)">India's #1 Offline Payments App <br />Coded by Shaurya Tripathi</p>
             </div>
-            <nav class="header-nav">
-                <button id="settingsBtn" class="header-btn" aria-label="Settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                    </svg>
-                </button>
-            </nav>
-        </header>
-        
-        <nav class="tab-bar">
-            <a href="#share" class="tab-item active" data-view="share">
-                <svg class="tab-icon" viewBox="0 0 24 24">
-                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"></path>
-                </svg>
-                <span>Share</span>
-            </a>
-            <a href="#receive" class="tab-item" data-view="receive">
-                <svg class="tab-icon" viewBox="0 0 24 24">
-                    <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"></path>
-                </svg>
-                <span>Receive</span>
-            </a>
-            <a href="#history" class="tab-item" data-view="history">
-                <svg class="tab-icon" viewBox="0 0 24 24">
-                    <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"></path>
-                </svg>
-                <span>History</span>
-            </a>
-        </nav>
-        
-        <main id="mainContent">
-            <section id="share" class="view active">
-                <h2>Share a File</h2>
-                <div class="file-input-container">
-                    <input type="file" id="fileInput" class="file-input" accept="*/*">
-                    <label for="fileInput" class="file-input-label">
-                        <svg class="file-icon" viewBox="0 0 24 24">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path>
-                        </svg>
-                        <span>Choose a file</span>
-                    </label>
-                </div>
-                <div id="filePreview" class="file-preview"></div>
-                <div class="share-options">
-                    <div class="option">
-                        <label for="compressionLevel">Compression:</label>
-                        <select id="compressionLevel" class="ios-select">
-                            <option value="none">None</option>
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="option">
-                        <label for="encryptionStrength">Encryption:</label>
-                        <select id="encryptionStrength" class="ios-select">
-                            <option value="low">Low</option>
-                            <option value="medium" selected>Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div class="option">
-                        <label for="expirationTime">Expiration:</label>
-                        <select id="expirationTime" class="ios-select">
-                            <option value="1">1 hour</option>
-                            <option value="24" selected>24 hours</option>
-                            <option value="168">7 days</option>
-                            <option value="720">30 days</option>
-                        </select>
-                    </div>
-                    <div class="option">
-                        <label for="filePassword">Password:</label>
-                        <input type="password" id="filePassword" class="ios-input" placeholder="Optional">
-                    </div>
-                </div>
-                <button id="shareFileBtn" class="ios-button primary">Share File</button>
-                <div id="shareProgress" class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress"></div>
-                    </div>
-                    <p class="progress-text">0%</p>
-                </div>
-            </section>
             
-            <section id="receive" class="view">
-                <h2>Receive a File</h2>
-                <div class="code-input-container">
-                    <input type="text" id="codeInput" class="ios-input" placeholder="Enter 6-digit code">
-                    <button id="receiveFileBtn" class="ios-button primary">Receive File</button>
-                </div>
-                <div id="receiveProgress" class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress"></div>
-                    </div>
-                    <p class="progress-text">0%</p>
-                </div>
-            </section>
-            
-            <section id="history" class="view">
-                <h2>File Transfer History</h2>
-                <div class="history-filter">
-                    <label for="historyTypeFilter">Filter:</label>
-                    <select id="historyTypeFilter" class="ios-select">
-                        <option value="all">All</option>
-                        <option value="sent">Sent</option>
-                        <option value="received">Received</option>
-                    </select>
-                </div>
-                <ul id="historyList" class="history-list"></ul>
-            </section>
-        </main>
-    </div>
-    
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <h2>Settings</h2>
-            <div class="settings-group">
-                <h3>Appearance</h3>
-                <div class="setting-item">
-                    <label for="themeSelect">Theme:</label>
-                    <select id="themeSelect" class="ios-select">
-                        <option value="light">Light</option>
-                        <option value="dark">Dark</option>
-                        <option value="auto">Auto</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <label for="accentColorSelect">Accent Color:</label>
-                    <select id="accentColorSelect" class="ios-select">
-                        <option value="blue">Blue</option>
-                        <option value="green">Green</option>
-                        <option value="indigo">Indigo</option>
-                        <option value="orange">Orange</option>
-                        <option value="pink">Pink</option>
-                        <option value="purple">Purple</option>
-                        <option value="red">Red</option>
-                        <option value="teal">Teal</option>
-                        <option value="yellow">Yellow</option>
-                    </select>
-                </div>
+            <div class="glass-card mt-40">
+                <h3 id="auth-title">Welcome Back</h3>
+                <input type="text" id="login-username" placeholder="Username" style="display:none;">
+                <input type="tel" id="login-pin" placeholder="Enter 4-Digit PIN" maxlength="4" style="text-align:center; letter-spacing:10px; font-size:24px;">
+                <button class="btn btn-primary" onclick="handleLogin()">Continue</button>
+                <button class="btn" id="create-acc-btn" onclick="showCreateAccount()" style="margin-top:10px;">Create Account</button>
             </div>
-            <div class="settings-group">
-                <h3>File Sharing</h3>
-                <div class="setting-item">
-                    <label for="codeLengthInput">Code Length:</label>
-                    <input type="number" id="codeLengthInput" class="ios-input" min="4" max="10" value="6">
-                </div>
-                <div class="setting-item">
-                    <label for="maxFileSizeInput">Max File Size (MB):</label>
-                    <input type="number" id="maxFileSizeInput" class="ios-input" min="1" max="1000" value="100">
-                </div>
-                <div class="setting-item">
-                    <label for="autoDeleteInput">Auto-delete after (days):</label>
-                    <input type="number" id="autoDeleteInput" class="ios-input" min="1" max="365" value="30">
-                </div>
-            </div>
-            <div class="settings-group">
-                <h3>Security</h3>
-                <div class="setting-item">
-                    <label for="defaultEncryptionSelect">Default Encryption:</label>
-                    <select id="defaultEncryptionSelect" class="ios-select">
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <label for="passwordProtectionToggle">Require Password:</label>
-                    <div class="toggle-switch">
-                        <input type="checkbox" id="passwordProtectionToggle" class="toggle-input">
-                        <label for="passwordProtectionToggle" class="toggle-label"></label>
-                    </div>
-                </div>
-            </div>
-            <button id="saveSettingsBtn" class="ios-button primary">Save Settings</button>
-            <button id="closeSettingsBtn" class="ios-button secondary">Close</button>
         </div>
     </div>
+
+    <div id="home-screen" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div>
+                <small style="color:var(--text-muted)">Hello,</small>
+                <h2 id="display-username">User</h2>
+            </div>
+            <div onclick="logout()" style="padding:10px; "><i class="fa-solid fa-power-off"></i></div>
+        </div>
+
+        <div class="glass-card balance-card">
+            <small>Total Balance</small>
+            <div class="balance-amount">₹<span id="display-balance">0.00</span></div>
+            <small style="color:var(--text-muted)">User ID: <span id="display-userid" style="color:var(--accent)"></span></small>
+        </div>
+
+        <div class="action-grid">
+            <div class="glass-card action-btn" onclick="openSendFlow()">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Send</span>
+            </div>
+            <div class="glass-card action-btn" onclick="openReceiveFlow()">
+                <i class="fa-solid fa-qrcode"></i>
+                <span>Receive</span>
+            </div>
+        </div>
+
+        <h3>Transactions</h3>
+        <div class="tx-list" id="tx-container">
+            <div style="text-align:center; padding:20px; color:var(--text-muted)">No transactions yet</div>
+        </div>
+    </div>
+
+    <div id="send-screen" class="screen">
+        <div class="header-nav">
+            <i class="fa-solid fa-arrow-left back-btn" onclick="goHome()"></i>
+            <h2>Send Money</h2>
+        </div>
+        <div class="glass-card">
+            <label>Receiver Username / ID</label>
+            <input type="text" id="send-receiver" placeholder="e.g. user123">
+            
+            <label>Amount</label>
+            <input type="number" id="send-amount" placeholder="0.00">
+
+            <button class="btn btn-primary" onclick="verifySendPin()">Proceed</button>
+        </div>
+    </div>
+
+    <div id="pin-modal" class="modal-overlay">
+        <div class="modal-box glass-card">
+            <h3>Confirm PIN</h3>
+            <p>Enter PIN to authorize transaction</p>
+            <input type="tel" id="confirm-pin" maxlength="4" style="text-align:center; letter-spacing:8px; font-size:20px;">
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-danger" onclick="closeModal('pin-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="processSendGeneration()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="qr-screen" class="screen">
+        <div class="header-nav">
+            <i class="fa-solid fa-arrow-left back-btn" onclick="goHome()"></i>
+            <h2>Scan to Pay</h2>
+        </div>
+        <div class="text-center">
+            <p>Ask receiver to scan this QR code.</p>
+            <div id="qrcode"></div>
+            <p style="color:var(--text-muted); margin-top:10px;">Token Generated Successfully</p>
+            <p style="font-size:12px; word-break:break-all; opacity:0.5; margin-top:5px;" id="token-preview"></p>
+            <button class="btn" onclick="goHome()">Done</button>
+        </div>
+    </div>
+
+    <div id="scan-screen" class="screen">
+        <div class="header-nav">
+            <i class="fa-solid fa-arrow-left back-btn" onclick="goHome()"></i>
+            <h2>Receive Money</h2>
+        </div>
+        <div id="reader"></div>
+        <p class="text-center mt-20" style="color:var(--text-muted)">Point camera at Sender's QR Code</p>
+        <input type="file" id="qr-input-file" accept="image/*" style="display:none" onchange="handleFileScan(this)">
+        <button class="btn" onclick="document.getElementById('qr-input-file').click()">Scan Image from Gallery</button>
+    </div>
+
+    <div id="detail-screen" class="screen">
+        <div class="header-nav">
+            <i class="fa-solid fa-arrow-left back-btn" onclick="goHome()"></i>
+            <h2>Details</h2>
+        </div>
+        <div class="glass-card">
+            <div class="text-center mb-4">
+                <h1 id="detail-amount">₹0.00</h1>
+                <p id="detail-status" style="color:var(--success)">Successful</p>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Transaction ID</span>
+                <span id="detail-id" style="font-size:12px;">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date</span>
+                <span id="detail-date">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">From</span>
+                <span id="detail-from">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">To</span>
+                <span id="detail-to">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="alert-modal" class="modal-overlay">
+        <div class="modal-box glass-card">
+            <div id="alert-icon" style="font-size:40px; margin-bottom:10px;"></div>
+            <h3 id="alert-title"></h3>
+            <p id="alert-msg" style="color:var(--text-muted); margin:10px 0;"></p>
+            <button class="btn btn-primary" onclick="closeModal('alert-modal')">OK</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /** * CORE SYSTEM LOGIC 
+     * Using localStorage as a database.
+     */
     
-    <div id="toast" class="toast"></div>
+    // --- State Management ---
+    const DB_KEY = 'crepay_user_data';
+    let currentUser = null;
+    let html5QrcodeScanner = null;
+
+    // --- Navigation Helpers ---
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function showAlert(title, msg, type = 'info') {
+        const modal = document.getElementById('alert-modal');
+        const icon = document.getElementById('alert-icon');
+        document.getElementById('alert-title').innerText = title;
+        document.getElementById('alert-msg').innerText = msg;
+        
+        if(type === 'error') {
+            icon.innerHTML = '<i class="fa-solid fa-circle-xmark" style="color:var(--danger)"></i>';
+        } else if (type === 'success') {
+            icon.innerHTML = '<i class="fa-solid fa-circle-check" style="color:var(--success)"></i>';
+        } else {
+            icon.innerHTML = '<i class="fa-solid fa-circle-info" style="color:var(--accent)"></i>';
+        }
+        
+        modal.style.display = 'flex';
+    }
+
+    // --- Pure Numbers Encoding/Decoding ---
+    // Converts string to a sequence of 3-digit ASCII codes (e.g., 'A' -> '065')
+    function encodeToNumbers(dataStr) {
+        let numStr = "";
+        for (let i = 0; i < dataStr.length; i++) {
+            let code = dataStr.charCodeAt(i).toString();
+            while (code.length < 3) code = "0" + code; // Pad to 3 digits
+            numStr += code;
+        }
+        return numStr;
+    }
+
+    function decodeFromNumbers(numStr) {
+        let dataStr = "";
+        for (let i = 0; i < numStr.length; i += 3) {
+            let code = parseInt(numStr.substr(i, 3));
+            dataStr += String.fromCharCode(code);
+        }
+        return dataStr;
+    }
+
+    // --- Auth Logic ---
+    function init() {
+        const data = localStorage.getItem(DB_KEY);
+        if (data) {
+            // User exists
+            document.getElementById('create-acc-btn').style.display = 'none';
+            document.getElementById('auth-title').innerText = 'Enter PIN';
+        } else {
+            // New user setup
+            document.getElementById('auth-title').innerText = 'Create Account';
+            document.getElementById('login-username').style.display = 'block';
+            document.getElementById('login-pin').placeholder = 'Set 4-Digit PIN';
+        }
+    }
+
+    function showCreateAccount() {
+        // Just resets UI for creation flow
+        document.getElementById('create-acc-btn').style.display = 'none';
+        document.getElementById('login-username').style.display = 'block';
+        document.getElementById('auth-title').innerText = 'Setup Profile';
+    }
+
+    function handleLogin() {
+        const storedData = localStorage.getItem(DB_KEY);
+        const pinInput = document.getElementById('login-pin').value;
+        const userInput = document.getElementById('login-username').value;
+
+        if (!storedData) {
+            // REGISTER
+            if (pinInput.length !== 4 || !userInput) {
+                showAlert('Error', 'Please enter a username and a 4-digit PIN', 'error');
+                return;
+            }
+            const newUser = {
+                username: userInput,
+                pin: pinInput, // In prod, hash this
+                userId:  Math.floor(Math.random() * 100000) + '@cre',
+                balance: 1000.00, // Initial Bonus
+                transactions: []
+            };
+            localStorage.setItem(DB_KEY, JSON.stringify(newUser));
+            currentUser = newUser;
+            loadDashboard();
+        } else {
+            // LOGIN
+            const user = JSON.parse(storedData);
+            if (pinInput === user.pin) {
+                currentUser = user;
+                loadDashboard();
+            } else {
+                showAlert('Auth Failed', 'Incorrect PIN', 'error');
+                document.getElementById('login-pin').value = '';
+            }
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById('login-pin').value = '';
+        showScreen('auth-screen');
+    }
+
+    // --- Dashboard Logic ---
+    function loadDashboard() {
+        showScreen('home-screen');
+        document.getElementById('display-username').innerText = currentUser.username;
+        document.getElementById('display-userid').innerText = currentUser.userId;
+        updateBalanceDisplay();
+        renderTransactions();
+    }
+
+    function updateBalanceDisplay() {
+        document.getElementById('display-balance').innerText = parseFloat(currentUser.balance).toFixed(2);
+    }
+
+    function renderTransactions() {
+        const container = document.getElementById('tx-container');
+        container.innerHTML = '';
+        
+        const sortedTx = [...currentUser.transactions].reverse();
+
+        if(sortedTx.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted)">No transactions yet</div>';
+            return;
+        }
+
+        sortedTx.forEach(tx => {
+            const isCredit = tx.type === 'credit';
+            const sign = isCredit ? '+' : '-';
+            const colorClass = isCredit ? 'tx-plus' : 'tx-minus';
+            const otherParty = isCredit ? tx.senderUsername : tx.receiverId;
+
+            const div = document.createElement('div');
+            div.className = 'tx-item';
+            div.onclick = () => showTransactionDetails(tx);
+            div.innerHTML = `
+                <div class="tx-left">
+                    <span class="tx-user">${isCredit ? 'Received from' : 'Sent to'} ${otherParty}</span>
+                    <span class="tx-date">${new Date(tx.timestamp).toLocaleString()}</span>
+                </div>
+                <div class="tx-amount ${colorClass}">${sign}₹${tx.amount}</div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function showTransactionDetails(tx) {
+    // 1. Display Amount
+    document.getElementById('detail-amount').innerText = `₹${parseFloat(tx.amount).toFixed(2)}`;
     
-    <script src="app.js"></script>
+    // 2. Dynamic Status (Optional UX improvement: Shows Sent vs Received)
+    const statusEl = document.getElementById('detail-status');
+    if(tx.type === 'debit') {
+        statusEl.innerText = "Sent Successfully";
+        statusEl.style.color = "#ffffff"; // White for sent
+    } else {
+        statusEl.innerText = "Received Successfully";
+        statusEl.style.color = "var(--success)"; // Green for received
+    }
+
+    // 3. FIX: Use 'amountTokenId' (This matches the key used when creating the transaction)
+    document.getElementById('detail-id').innerText = tx.amountTokenId; 
+    
+    // 4. Date and Participants
+    document.getElementById('detail-date').innerText = new Date(tx.timestamp).toLocaleString();
+    document.getElementById('detail-from').innerText = tx.senderUsername + ` (${tx.senderId})`;
+    document.getElementById('detail-to').innerText = tx.receiverId; 
+    
+    // 5. Open the Screen
+    showScreen('detail-screen');
+}
+
+
+    function goHome() {
+        if(html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+        }
+        loadDashboard();
+    }
+
+    // --- Send Flow ---
+    let pendingTxData = null;
+
+    function openSendFlow() {
+        document.getElementById('send-amount').value = '';
+        document.getElementById('send-receiver').value = '';
+        showScreen('send-screen');
+    }
+
+    function verifySendPin() {
+        const amount = parseFloat(document.getElementById('send-amount').value);
+        const receiver = document.getElementById('send-receiver').value;
+
+        if (!amount || amount <= 0 || !receiver) {
+            showAlert('Invalid Input', 'Please enter valid amount and receiver ID', 'error');
+            return;
+        }
+        if (amount > currentUser.balance) {
+            showAlert('Insufficient Funds', 'You do not have enough balance.', 'error');
+            return;
+        }
+
+        pendingTxData = { amount, receiver };
+        document.getElementById('confirm-pin').value = '';
+        document.getElementById('pin-modal').style.display = 'flex';
+    }
+
+    function processSendGeneration() {
+        const enteredPin = document.getElementById('confirm-pin').value;
+        if (enteredPin !== currentUser.pin) {
+            showAlert('Error', 'Wrong PIN', 'error');
+            return;
+        }
+        
+        closeModal('pin-modal');
+        
+        // 1. Deduct Balance Immediately (Optimistic UI)
+        currentUser.balance -= pendingTxData.amount;
+        
+        // 2. Create Token
+        const tokenId = 'txn_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+        const txPayload = {
+            senderId: currentUser.userId,
+            senderUsername: currentUser.username,
+            receiverId: pendingTxData.receiver,
+            amount: pendingTxData.amount,
+            amountTokenId: tokenId,
+            timestamp: Date.now()
+        };
+
+        // 3. Save as Debit Transaction
+        currentUser.transactions.push({
+            ...txPayload,
+            type: 'debit'
+        });
+        localStorage.setItem(DB_KEY, JSON.stringify(currentUser));
+
+        // 4. Encode
+        const jsonStr = JSON.stringify(txPayload);
+        const numberStr = encodeToNumbers(jsonStr);
+
+        // 5. Generate QR
+        showScreen('qr-screen');
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, {
+            text: numberStr,
+            width: 200,
+            height: 200
+        });
+        
+        document.getElementById('token-preview').innerText = numberStr.substring(0, 20) + '...';
+    }
+
+    // --- Receive Flow ---
+    function openReceiveFlow() {
+        showScreen('scan-screen');
+        startScanner();
+    }
+
+    function startScanner() {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: 250 });
+        
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    }
+
+    function onScanFailure(error) {
+        // handle scan failure, usually better to ignore to prevent alert spam
+    }
+
+    async function handleFileScan(input) {
+        if (input.files.length === 0) return;
+        const html5QrCode = new Html5Qrcode("reader");
+        try {
+            const decodedText = await html5QrCode.scanFile(input.files[0], true);
+            onScanSuccess(decodedText);
+        } catch (err) {
+            showAlert('Scan Error', 'Could not read QR code from image.', 'error');
+        }
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if(html5QrcodeScanner) html5QrcodeScanner.clear();
+
+        try {
+            // 1. Decode Numbers -> JSON
+            const jsonStr = decodeFromNumbers(decodedText);
+            const data = JSON.parse(jsonStr);
+
+            // 2. Validation: Is this for me?
+            // Note: In this simulation, receiverId is the username or ID.
+            if (data.receiverId !== currentUser.userId && data.receiverId !== currentUser.username) {
+                showAlert('Access Denied', 'This payment is not intended for you.', 'error');
+                return;
+            }
+
+            // 3. Validation: Replay Attack (Check if token exists)
+            const exists = currentUser.transactions.some(t => t.amountTokenId === data.amountTokenId);
+            if (exists) {
+                showAlert('Failed', 'This payment token has already been claimed.', 'error');
+                return;
+            }
+
+            // 4. Success: Add Balance
+            currentUser.balance += parseFloat(data.amount);
+            
+            // 5. Save Transaction
+            currentUser.transactions.push({
+                ...data,
+                type: 'credit'
+            });
+            localStorage.setItem(DB_KEY, JSON.stringify(currentUser));
+
+            showAlert('Success', `Received ₹${data.amount} from ${data.senderUsername}`, 'success');
+            loadDashboard();
+
+        } catch (e) {
+            console.error(e);
+            showAlert('Error', 'Invalid QR Code Format.', 'error');
+            setTimeout(() => startScanner(), 2000); // Restart scanner if invalid
+        }
+    }
+
+    // Initialize App
+    window.onload = init;
+
+</script>
 </body>
 </html>
-
